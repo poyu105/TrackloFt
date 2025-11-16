@@ -23,8 +23,8 @@ export default function Dashboard(){
 
     //載入時取得專案列表(登入狀態下)
     useEffect(()=>{
-        if(userInfo && userInfo.userid){
-            dispatch(fetchProjects(userInfo.userid))
+        if(userInfo && userInfo.name /*userInfo.id*/){
+            dispatch(fetchProjects(userInfo.id))
                 .catch(err => toast.error(`取得專案列表失敗: ${err}`, { style: { whiteSpace: "pre-line" } }));
         }
     },[dispatch, userInfo]);
