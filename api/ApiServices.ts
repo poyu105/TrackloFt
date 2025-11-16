@@ -1,6 +1,9 @@
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 let acTk: string | null = null; //accessToken
+export function setAccessToken(token: string) {
+    acTk = token;
+}
 
 /**
  * API統一呼叫方法
@@ -49,7 +52,13 @@ export async function apiRequest(url: string, options: {method?: string; body?: 
     }
 
     if(!response.ok){
-        const errorText = await response.text();
+        let errorText: string;
+        try {
+            const data = await response.json();
+            errorText = data?.message || JSON.stringify(data);
+        } catch {
+            errorText = await response.text();
+        }
         throw new Error(errorText);
     }
 
@@ -63,25 +72,25 @@ export async function apiRequest(url: string, options: {method?: string; body?: 
 const ApiServices = {
     //自訂API
     custom: (url: string, method: string, body?: any)=>
-        apiRequest(url, {method, body}),
+        apiRequest(url, {method, body: {body}}),
 
     //登入
-    login: (mail: string, password: string)=>
+    login: (email: string, password: string)=>
         apiRequest(`auth/login`, {
             method: 'POST',
-            body: JSON.stringify({ mail, password })
+            body: { email, password }
         }),
 
     //註冊
-    register: (username: string, mail: string, password: string)=>
+    register: (name: string, email: string, password: string)=>
         apiRequest(`auth/register`, {
             method: 'POST',
-            body: JSON.stringify({ username, mail, password })
+            body: { name, email, password }
         }),
 
     //取得專案
     getProjects: (userid: string)=>
-        apiRequest(`projects/${userid}`, {
+        apiRequest(`project/getAllProject`, {
             method: 'GET'
         }),
 
@@ -101,7 +110,7 @@ const ApiServices = {
     moveTask: (taskId: string, fromBoardId: string, toBoardId: string)=>
         apiRequest(`tasks/${taskId}/move`, {
             method: 'POST',
-            body: JSON.stringify({ taskId, fromBoardId, toBoardId })
+            body: { taskId, fromBoardId, toBoardId }
         }),
 }
 export default ApiServices;
