@@ -12,7 +12,7 @@ export default function SidebarBlock({
 
     return(
         <>
-            <div className="w-64 bg-gradient-to-b from-gray-900 to-gray-800 text-white p-4 flex flex-col shadow-xl">
+            <div className="w-64 bg-linear-to-b from-gray-900 to-gray-800 text-white p-4 flex flex-col shadow-xl">
                 {/* 標題 */}
                 <div className="mb-8 flex flex-col items-center text-center">
                     <a href="/" className="">
@@ -32,7 +32,7 @@ export default function SidebarBlock({
                 {/* <div className="flex-1 overflow-y-auto"> */}
                     {/* <div className="mb-4"> */}
                         <div className="space-y-1">
-                            {projects.map((project, index) => (
+                            {projects?.map((project, index) => (
                                 <button 
                                     key={project.id + index} 
                                     onClick={() => setCurrentProject(project)}
@@ -61,7 +61,7 @@ export default function SidebarBlock({
                 <div className="pt-4 border-t border-gray-700">
                     <div className="flex items-center gap-3 px-3 py-2">
                         {/* 名稱頭像 */}
-                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-sm font-bold">
+                        <div className="w-8 h-8 rounded-full bg-linear-to-br from-blue-400 to-purple-500 flex items-center justify-center text-sm font-bold">
                             {userInfo.name ? userInfo.name.charAt(0) : "U"}
                         </div>
                         <div className="flex-1">
