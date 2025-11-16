@@ -1,49 +1,80 @@
 "use client"
 
 import { useState } from 'react';
-import { Rocket, Mail, Lock, ArrowRight, CheckCircle2, Eye, EyeOff } from 'lucide-react';
+import { Mail, Lock, ArrowRight, CheckCircle2, Eye, EyeOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Link } from "@radix-ui/themes";
+import { InputField, SocialLogin } from '../components';
+import { toast } from 'sonner';
+import ApiServices, { setAccessToken } from '@/api/ApiServices';
+import { useRouter } from 'next/navigation';
+import { useDispatch } from 'react-redux';
+import { login } from '@/store/userSlice';
 
 export default function Login() {
+  const router = useRouter();
+  const dispatch = useDispatch();
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
     password: '',
     name: '',
-    company: '',
     confirmPassword: ''
   });
 
-  const handleInputChange = (e) => {
+  const handleInputChange = (e: any) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value
     });
   };
 
-  const handleSubmit = () => {
-    console.log('登入:', formData);
-    alert('登入功能：' + formData.email);
+  const handleSubmit = async () => {
+    if(!formData.email || !formData.password){
+      toast.warning('請輸入電子郵件或密碼');
+      return;
+    }
+
+    try {
+      const res = await ApiServices.login(formData.email, formData.password);
+      if(res){
+        toast.success(res.message);
+        setAccessToken(res.data.accessToken);
+        dispatch(
+          login({
+            userInfo: {
+              id: res.data.user.id,
+              name: res.data.user.name,
+              email: res.data.user.email,
+              role: res.data.user.role || "用戶",
+            },
+            token: res.data.accessToken,
+          })
+        )
+        router.push('/dashboard');
+      }
+    } catch (error) {
+      toast.error(`${error}`);
+      console.error(error);
+    }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-green-50 to-blue-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-linear-to-br from-blue-50 via-green-50 to-blue-50 flex items-center justify-center p-4">
       <div className="w-full max-w-6xl grid md:grid-cols-2 gap-8 items-center">
         {/* Left Side - Branding */}
         <div className="hidden md:block space-y-8">
-          <div className="flex items-center space-x-3">
-            <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-green-500 rounded-xl flex items-center justify-center">
-              <Rocket className="w-8 h-8 text-white" />
-            </div>
-            <span className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-green-600 bg-clip-text text-transparent">
-              Tracklo
-            </span>
-          </div>
+          {/* Logo */}
+          <Link href="/" className="inline-block">
+            <img 
+              src='/Tracklo-logo-removebg-rectangle.png'
+              width={200}
+              height={80}
+            />
+          </Link>
 
+          {/* 大標 */}
           <div className="space-y-6">
             <h1 className="text-4xl font-bold text-gray-900 leading-tight">
               歡迎回來！
@@ -53,9 +84,10 @@ export default function Login() {
             </p>
           </div>
 
+          {/* 功能簡介 */}
           <div className="space-y-4">
             <div className="flex items-start gap-3">
-              <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+              <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center shrink-0">
                 <CheckCircle2 className="w-6 h-6 text-blue-600" />
               </div>
               <div>
@@ -65,7 +97,7 @@ export default function Login() {
             </div>
 
             <div className="flex items-start gap-3">
-              <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
+              <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center shrink-0">
                 <CheckCircle2 className="w-6 h-6 text-green-600" />
               </div>
               <div>
@@ -75,7 +107,7 @@ export default function Login() {
             </div>
 
             <div className="flex items-start gap-3">
-              <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+              <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center shrink-0">
                 <CheckCircle2 className="w-6 h-6 text-blue-600" />
               </div>
               <div>
@@ -89,11 +121,14 @@ export default function Login() {
         {/* Right Side - Auth Form */}
         <Card className="border-2 border-blue-100 shadow-2xl">
           <CardHeader className="space-y-1 pb-6">
-            <div className="md:hidden flex items-center justify-center mb-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-green-500 rounded-xl flex items-center justify-center">
-                <Rocket className="w-7 h-7 text-white" />
-              </div>
-            </div>
+            {/* mobile show logo */}
+            <Link href='/' className="md:hidden flex items-center justify-center">
+              <img 
+                src='/Tracklo-logo-removebg-rectangle.png'
+                width={120}
+                height={50}
+              />
+            </Link>
             <CardTitle className="text-2xl font-bold text-center">
               登入帳戶
             </CardTitle>
@@ -105,36 +140,30 @@ export default function Login() {
           <CardContent>
             <div className="space-y-4">
               {/* Email */}
-              <div className="space-y-2">
-                <Label htmlFor="email">電子郵件</Label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
-                  <Input
-                    id="email"
-                    name="email"
-                    type="email"
-                    placeholder="name@example.com"
-                    value={formData.email}
-                    onChange={handleInputChange}
-                    className="pl-10 h-12 border-2 focus:border-blue-500"
-                  />
-                </div>
-              </div>
+              <InputField
+                label={'電子郵件'}
+                htmlfor={'email'}
+                icon={<Mail className="absolute left-3 top-3 w-5 h-5 text-gray-400" />}
+                inputId={'email'}
+                inputName={'email'}
+                type={'email'}
+                placeholder={'name@example.com'}
+                value={formData.email}
+                onChange={handleInputChange}
+              />
 
               {/* Password */}
-              <div className="space-y-2">
-                <Label htmlFor="password">密碼</Label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
-                  <Input
-                    id="password"
-                    name="password"
-                    type={showPassword ? "text" : "password"}
-                    placeholder={"請輸入密碼"}
-                    value={formData.password}
-                    onChange={handleInputChange}
-                    className="pl-10 pr-10 h-12 border-2 focus:border-blue-500"
-                  />
+              <InputField
+                label={'密碼'}
+                htmlfor={'password'}
+                icon={<Lock className="absolute left-3 top-3 w-5 h-5 text-gray-400" />}
+                inputId={'password'}
+                inputName={'password'}
+                type={showPassword ? "text" : "password"}
+                placeholder={'請輸入密碼'}
+                value={formData.password}
+                onChange={handleInputChange}
+                eye={
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
@@ -142,8 +171,8 @@ export default function Login() {
                   >
                     {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                   </button>
-                </div>
-              </div>
+                }
+              />
 
               {/* 登入時顯示忘記密碼 */}
               <div className="flex items-center justify-between">
@@ -159,7 +188,7 @@ export default function Login() {
               {/* Submit Button */}
               <Button 
                 onClick={handleSubmit}
-                className="w-full h-12 bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700 text-white font-medium text-base"
+                className="w-full h-12 bg-linear-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700 text-white font-medium text-base"
               >
                 登入
                 <ArrowRight className="ml-2 w-5 h-5" />
@@ -176,29 +205,7 @@ export default function Login() {
               </div>
 
               {/* Social Login */}
-              <div className="grid grid-cols-2 gap-3">
-                <Button 
-                  variant="outline" 
-                  className="h-12 border-2 border-gray-300 hover:bg-gray-50"
-                >
-                  <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
-                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-                  </svg>
-                  Google
-                </Button>
-                <Button 
-                  variant="outline" 
-                  className="h-12 border-2 border-gray-300 hover:bg-gray-50"
-                >
-                  <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
-                  </svg>
-                  GitHub
-                </Button>
-              </div>
+              <SocialLogin />
 
               {/* Toggle between login and signup */}
               <div className="text-center pt-4">
@@ -214,7 +221,7 @@ export default function Login() {
               </div>
             </div>
             
-            {/* Mobile Branding at Bottom */}
+            {/* © Bottom */}
             <div className="text-center">
               <p className="text-sm text-gray-500">
                 © 2025 Tracklo. 版權所有
