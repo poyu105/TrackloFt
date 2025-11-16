@@ -4,7 +4,7 @@ import ApiServices from "../api/ApiServices";
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 
 //取得專案(不含board和task)
-export const fetchProjects = createAsyncThunk("project/fetchProjects", async (userid)=>{
+export const fetchProjects = createAsyncThunk("project/getAllProject", async (userid)=>{
     return await ApiServices.getProjects(userid);
 });
 
